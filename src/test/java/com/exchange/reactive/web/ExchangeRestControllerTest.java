@@ -52,8 +52,8 @@ public class ExchangeRestControllerTest {
 
         mockMvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.errorCode", nullValue()))
-                .andExpect(jsonPath("$.data", nullValue()));
+                .andExpect(jsonPath("$.amount", equalTo(200.0)))
+                .andExpect(jsonPath("$.currencyOrigin", equalTo("S")));
 
         verify(exchangeService, times(1)).addExchange(any(AddExchangeRequest.class));
     }
