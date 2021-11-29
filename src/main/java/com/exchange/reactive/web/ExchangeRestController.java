@@ -42,15 +42,14 @@ public class ExchangeRestController {
                 .body(s));
     }
 
-
     @GetMapping(
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public Single<ResponseEntity<BaseWebResponse<List<ExchangeWebResponse>>>> getAllExchanges(@RequestParam(value = "limit", defaultValue = "5") int limit,
+    public Single<ResponseEntity<List<ExchangeWebResponse>>> getAllExchanges(@RequestParam(value = "limit", defaultValue = "5") int limit,
                                                                                               @RequestParam(value = "page", defaultValue = "0") int page) {
         return exchangeService.getAllExchanges(limit, page)
                 .subscribeOn(Schedulers.io())
-                .map(exchangeResponses -> ResponseEntity.ok(BaseWebResponse.successWithData(toExchangeWebResponseList(exchangeResponses))));
+                .map(exchangeResponses -> ResponseEntity.ok(toExchangeWebResponseList(exchangeResponses)));
     }
 
     private List<ExchangeWebResponse> toExchangeWebResponseList(List<ExchangeResponse> exchangeResponseList) {
@@ -70,7 +69,7 @@ public class ExchangeRestController {
             value = "/{exchangeId}",
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public Single<ResponseEntity<BaseWebResponse<ExchangeWebResponse>>> getBookDetail(@PathVariable(value = "exchangeId") String exchangeId) {
+    public Single<ResponseEntity<BaseWebResponse<ExchangeWebResponse>>> getExchangeDetail(@PathVariable(value = "exchangeId") String exchangeId) {
         return exchangeService.getExchangeDetail(exchangeId)
                 .subscribeOn(Schedulers.io())
                 .map(exchangeResponse -> ResponseEntity.ok(BaseWebResponse.successWithData(toExchangeWebResponse(exchangeResponse))));

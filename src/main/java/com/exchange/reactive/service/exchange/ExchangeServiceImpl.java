@@ -37,7 +37,10 @@ public class ExchangeServiceImpl implements ExchangeService {
     private Exchange toExchange(AddExchangeRequest addExchangeRequest) {
         Exchange exchange = new Exchange();
         BeanUtils.copyProperties(addExchangeRequest, exchange);
-        exchange.setId(UUID.randomUUID().toString());
+        if(exchange.getId()==null)
+        {
+            exchange.setId(UUID.randomUUID().toString());
+        }
         double amount= addExchangeRequest.getAmount();
         String  currency = addExchangeRequest.getCurrencyOrigin().toUpperCase();
         if(currency.equals("S")){
@@ -50,6 +53,20 @@ public class ExchangeServiceImpl implements ExchangeService {
 
         return exchange;
     }
+    private Exchange toExchange(Exchange exchange) {
+        double amount= exchange.getAmount();
+        String  currency = exchange.getCurrencyOrigin().toUpperCase();
+        if(currency.equals("S")){
+            exchange.setAmountExchange(amount / exchange.getTypeExchange());
+            exchange.setDestinationCurrency("D");
+        }else if(currency.equals("D")){
+            exchange.setAmountExchange(amount * exchange.getTypeExchange());
+            exchange.setDestinationCurrency("S");
+        }
+
+        return exchange;
+    }
+
 
     @Override
     public Single<List<ExchangeResponse>> getAllExchanges(int limit, int page) {
@@ -92,7 +109,7 @@ public class ExchangeServiceImpl implements ExchangeService {
                 exchange.setAmount(updateExchangeRequest.getAmount());
                 exchange.setCurrencyOrigin(updateExchangeRequest.getCurrencyOrigin());
                 exchange.setTypeExchange(updateExchangeRequest.getTypeExchange());
-                exchangeRepository.save(exchange);
+                exchangeRepository.save(toExchange(exchange));
                 completableSubscriber.onComplete();
             }
         });

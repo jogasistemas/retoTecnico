@@ -10,7 +10,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class SimpleCORSFilter implements WebMvcConfigurer {
 
-
 	@Override
 	public void addCorsMappings(CorsRegistry registry) {
 
