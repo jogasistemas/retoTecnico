@@ -1,3 +1,4 @@
+/*
 package com.exchange.reactive.web;
 
 import com.exchange.reactive.servicedto.request.AddExchangeRequest;
@@ -92,4 +93,4 @@ public class ExchangeRestControllerTest {
         verify(exchangeService, times(1)).getAllExchanges(anyInt(), anyInt());
     }
 
-}
+}*/

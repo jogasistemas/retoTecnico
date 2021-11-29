@@ -2,15 +2,19 @@ package com.exchange.reactive.service.exchange;
 
 import com.exchange.reactive.repository.ExchangeRepository;
 import com.exchange.reactive.servicedto.request.AddExchangeRequest;
+import com.exchange.reactive.servicedto.request.UpdateExchangeRequest;
 import com.exchange.reactive.servicedto.response.ExchangeResponse;
 import com.exchange.reactive.entity.Exchange;
+import io.reactivex.Completable;
 import io.reactivex.Single;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.EntityNotFoundException;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -19,8 +23,6 @@ public class ExchangeServiceImpl implements ExchangeService {
 
     @Autowired
     private ExchangeRepository exchangeRepository;
-
-    private final double typeExchange = 4.0;
 
     @Override
     public Single<ExchangeResponse> addExchange(AddExchangeRequest addExchangeRequest) {
@@ -32,7 +34,6 @@ public class ExchangeServiceImpl implements ExchangeService {
         });
     }
 
-
     private Exchange toExchange(AddExchangeRequest addExchangeRequest) {
         Exchange exchange = new Exchange();
         BeanUtils.copyProperties(addExchangeRequest, exchange);
@@ -40,10 +41,10 @@ public class ExchangeServiceImpl implements ExchangeService {
         double amount= addExchangeRequest.getAmount();
         String  currency = addExchangeRequest.getCurrencyOrigin().toUpperCase();
         if(currency.equals("S")){
-            exchange.setAmountExchange(amount / typeExchange);
+            exchange.setAmountExchange(amount / addExchangeRequest.getTypeExchange());
             exchange.setDestinationCurrency("D");
         }else if(currency.equals("D")){
-            exchange.setAmountExchange(amount * typeExchange);
+            exchange.setAmountExchange(amount * addExchangeRequest.getTypeExchange());
             exchange.setDestinationCurrency("S");
         }
 
@@ -76,4 +77,42 @@ public class ExchangeServiceImpl implements ExchangeService {
         return exchangeResponse;
     }
 
+    @Override
+    public Completable updateExchange(UpdateExchangeRequest updateBookRequest) {
+        return updateExchangeToRepository(updateBookRequest);
+    }
+
+    private Completable updateExchangeToRepository(UpdateExchangeRequest updateExchangeRequest) {
+        return Completable.create(completableSubscriber -> {
+            Optional<Exchange> optionalExchange = exchangeRepository.findById(updateExchangeRequest.getId());
+            if (!optionalExchange.isPresent())
+                completableSubscriber.onError(new EntityNotFoundException());
+            else {
+                Exchange exchange = optionalExchange.get();
+                exchange.setAmount(updateExchangeRequest.getAmount());
+                exchange.setCurrencyOrigin(updateExchangeRequest.getCurrencyOrigin());
+                exchange.setTypeExchange(updateExchangeRequest.getTypeExchange());
+                exchangeRepository.save(exchange);
+                completableSubscriber.onComplete();
+            }
+        });
+    }
+
+
+    @Override
+    public Single<ExchangeResponse> getExchangeDetail(String id) {
+        return findExchangeDetailInRepository(id);
+    }
+
+    private Single<ExchangeResponse> findExchangeDetailInRepository(String id) {
+        return Single.create(singleSubscriber -> {
+            Optional<Exchange> optionalExchange = exchangeRepository.findById(id);
+            if (!optionalExchange.isPresent())
+                singleSubscriber.onError(new EntityNotFoundException());
+            else {
+                ExchangeResponse exchangeResponse = toExchangeResponse(optionalExchange.get());
+                singleSubscriber.onSuccess(exchangeResponse);
+            }
+        });
+    }
 }
